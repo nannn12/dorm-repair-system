@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h2>宿舍智能报修系统-登录</h2>
+<form method="post">
+账号：<input name="username"><br>
+密码：<input name="password"><br>
+<button type="submit">登录</button>
+</form>
+{% with msg = get_flashed_messages() %}
+{{msg[0]}}
+{% endwith %}
+</body>
+</html>

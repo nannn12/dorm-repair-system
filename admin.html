@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h2>管理员-全部工单管理</h2>
+{% for item in orders %}
+<p>工单ID{{item[0]}}｜地点{{item[1]}}｜描述{{item[2]}}｜紧急{{item[3]}}｜状态{{item[5]}}｜时间{{item[6]}}</p >
+{% endfor %}
+</body>
+</html>
