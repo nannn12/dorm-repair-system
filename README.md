@@ -86,10 +86,6 @@ http://127.0.0.1:5000
 3. 极简轻量化部署：基于 SQLite，无需配置数据库，一键启动、零环境依赖。
 4. 配套设计文档齐全：附带需求说明书、ER图、业务流程图，项目开发流程规范，适合参赛评审。
  
-项目结构（完全匹配Github仓库内排序）
- 
-plaintext
-  
 dorm-repair-system/
 ├─ docs/
 │  ├─ ER图.png
@@ -102,4 +98,6 @@ dorm-repair-system/
 │  └─ worker.html
 ├─ README.md
 ├─ app.py
-└─ repair.db
+├─ repair.db
+├─ 启动系统.bat
+└─ 启动系统.vbs
