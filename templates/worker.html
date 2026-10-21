@@ -1,20 +1,63 @@
 <!DOCTYPE html>
 <html>
+<head>
+<meta charset="utf-8">
+<title>维修人员工单</title>
+<style>
+body{background:linear-gradient(135deg,#f0ecf7,#ffffff);min-height:100vh;display:flex;justify-content:center;align-items:center;font-family:Microsoft Yahei;}
+.card{background:#e9e4f0;padding:40px;border-radius:12px;box-shadow:0 4px 12px rgba(100,90,130,0.15);width:900px;}
+h2{text-align:center;color:#333;margin-top:0;}
+table{border-collapse:collapse;width:100%;margin:20px 0;}
+td,th{border:1px solid #c9c2d8;padding:10px;text-align:center;}
+th{background:#dcd4e8;}
+button{padding:6px 15px;background:#9887b8;color:white;border:none;border-radius:5px;cursor:pointer;}
+button:hover{background:#806fa0;}
+.done-tag{color:#27ae60;font-weight:bold;}
+.msg{color:#27ae60;text-align:center;font-size:14px;margin:10px 0;}
+.btn-row{text-align:center;margin-top:20px;}
+</style>
+</head>
 <body>
-<h2>维修人员工单</h2>
-{% for item in orders %}
-<div>
-工单ID：{{item[0]}}，地点：{{item[1]}}，问题：{{item[2]}}，紧急度：{{item[3]}}，状态：{{item[5]}}
-<form method="post">
-<input type="hidden" name="oid" value="{{item[0]}}">
-<select name="status">
-<option>待处理</option>
-<option>维修中</option>
-<option>已完成</option>
-</select>
-<button>修改状态</button>
+<div class="card">
+<h2>维修人员工单页面</h2>
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    {% for msg in messages %}
+    <p class="msg">{{ msg }}</p >
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+<table>
+<tr>
+<th>报修地点</th>
+<th>故障描述</th>
+<th>紧急等级</th>
+<th>当前状态</th>
+<th>操作</th>
+</tr>
+{% for order in orders %}
+<tr>
+<td>{{ order[2] }}</td>
+<td>{{ order[1] }}</td>
+<td>{{ order[3] }}</td>
+<td>{{ order[5] }}</td>
+<td>
+{% if order[5] == '待处理' %}
+<form method="post" style="margin:0;">
+<input type="hidden" name="oid" value="{{ order[0] }}">
+<button type="submit">标记为已完成</button>
 </form>
-</div>
+{% else %}
+<span class="done-tag">已完成</span>
+{% endif %}
+</td>
+</tr>
 {% endfor %}
+</table>
+<!-- 替换的返回按钮 -->
+<div class="btn-row">
+    <button type="button" onclick="location.href='/login'">返回登录页面</button>
+</div>
+</div>
 </body>
 </html>
