@@ -1,20 +1,53 @@
 <!DOCTYPE html>
 <html>
+<head>
+<meta charset="utf-8">
+<title>学生报修</title>
+<style>
+body{background:linear-gradient(135deg,#f0ecf7,#ffffff);min-height:100vh;display:flex;justify-content:center;align-items:center;font-family:Microsoft Yahei;}
+.card{background:#e9e4f0;padding:40px 50px;border-radius:12px;box-shadow:0 4px 12px rgba(100,90,130,0.15);width:400px;}
+h2{text-align:center;color:#333;margin-top:0;}
+.item{margin:15px 0;}
+input,textarea,select{width:100%;padding:10px;border:1px solid #c9c2d8;border-radius:6px;box-sizing:border-box;}
+button{padding:10px 25px;background:#9887b8;color:white;border:none;border-radius:6px;font-size:15px;cursor:pointer;margin:0 8px;}
+button:hover{background:#806fa0;}
+.msg{color:#27ae60;text-align:center;font-size:14px;margin:10px 0;}
+.btn-row{text-align:center;margin-top:20px;}
+</style>
+</head>
 <body>
+<div class="card">
 <h2>学生报修页面</h2>
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    {% for msg in messages %}
+    <p class="msg">{{ msg }}</p >
+    {% endfor %}
+  {% endif %}
+{% endwith %}
 <form method="post">
-报修地点：<input name="location"><br>
-故障描述：<textarea name="content"></textarea><br>
+<div class="item">
+报修地点：<input type="text" name="place" placeholder="例：3号宿舍201">
+</div>
+<div class="item">
+故障描述：<textarea name="desc" rows="4" placeholder="例：宿舍电灯损坏"></textarea>
+</div>
+<div class="item">
 紧急等级：
 <select name="level">
-<option>高</option>
-<option>中</option>
-<option>低</option>
+<option value="高">高（紧急）</option>
+<option value="中">中</option>
+<option value="低">低</option>
 </select>
+</div>
+<div class="btn-row">
 <button type="submit">提交报修</button>
+</div>
 </form>
-{% with msg = get_flashed_messages() %}
-{{msg[0]}}
-{% endwith %}
+<!-- ==========这里是修改的返回按钮========== -->
+<div class="btn-row">
+    <button type="button" onclick="location.href='/login'">返回登录页面</button>
+</div>
+</div>
 </body>
 </html>
