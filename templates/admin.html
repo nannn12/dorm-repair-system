@@ -1,9 +1,46 @@
 <!DOCTYPE html>
 <html>
+<head>
+<meta charset="utf-8">
+<title>管理员后台</title>
+<style>
+body{background:linear-gradient(135deg,#f0ecf7,#ffffff);min-height:100vh;display:flex;justify-content:center;align-items:center;font-family:Microsoft Yahei;}
+.card{background:#e9e4f0;padding:40px;border-radius:12px;box-shadow:0 4px 12px rgba(100,90,130,0.15);width:1000px;}
+h2{text-align:center;color:#333;margin-top:0;}
+table{border-collapse:collapse;width:100%;margin:20px 0;}
+td,th{border:1px solid #c9c2d8;padding:10px;text-align:center;}
+th{background:#dcd4e8;}
+button{padding:6px 15px;background:#9887b8;color:white;border:none;border-radius:5px;cursor:pointer;}
+.btn-row{text-align:center;margin-top:20px;}
+</style>
+</head>
 <body>
-<h2>管理员-全部工单管理</h2>
-{% for item in orders %}
-<p>工单ID{{item[0]}}｜地点{{item[1]}}｜描述{{item[2]}}｜紧急{{item[3]}}｜状态{{item[5]}}｜时间{{item[6]}}</p >
+<div class="card">
+<h2>管理员后台 - 全部工单</h2>
+<table>
+<tr>
+<th>工单ID</th>
+<th>报修地点</th>
+<th>故障描述</th>
+<th>紧急等级</th>
+<th>状态</th>
+<th>创建时间</th>
+</tr>
+{% for order in orders %}
+<tr>
+<td>{{ order[0] }}</td>
+<td>{{ order[2] }}</td>
+<td>{{ order[1] }}</td>
+<td>{{ order[3] }}</td>
+<td>{{ order[5] }}</td>
+<td>{{ order[6] }}</td>
+</tr>
 {% endfor %}
+</table>
+<!-- 替换的返回按钮 -->
+<div class="btn-row">
+    <button type="button" onclick="location.href='/login'">返回登录页面</button>
+</div>
+</div>
 </body>
 </html>
