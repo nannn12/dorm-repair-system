@@ -2,61 +2,115 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>维修人员工单</title>
+<title>维修人员工作台</title>
 <style>
-body{background:linear-gradient(135deg,#f0ecf7,#ffffff);min-height:100vh;display:flex;justify-content:center;align-items:center;font-family:Microsoft Yahei;}
-.card{background:#e9e4f0;padding:40px;border-radius:12px;box-shadow:0 4px 12px rgba(100,90,130,0.15);width:900px;}
-h2{text-align:center;color:#333;margin-top:0;}
-table{border-collapse:collapse;width:100%;margin:20px 0;}
-td,th{border:1px solid #c9c2d8;padding:10px;text-align:center;}
-th{background:#dcd4e8;}
-button{padding:6px 15px;background:#9887b8;color:white;border:none;border-radius:5px;cursor:pointer;}
+*{box-sizing:border-box;}
+body{background:linear-gradient(135deg,#f0ecf7,#ffffff);min-height:100vh;font-family:Microsoft Yahei;margin:0;padding:30px 0;}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px;}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.topbar h2{margin:0;color:#333;font-size:22px;}
+.topbar .user{color:#666;font-size:14px;}
+.topbar a{color:#9887b8;text-decoration:none;margin-left:12px;font-size:14px;}
+.card{background:#e9e4f0;padding:26px 30px;border-radius:12px;box-shadow:0 4px 12px rgba(100,90,130,0.15);margin-bottom:22px;}
+.card h3{margin-top:0;color:#444;border-left:4px solid #9887b8;padding-left:10px;}
+.msg{color:#27ae60;text-align:center;font-size:14px;margin:8px 0;}
+table{border-collapse:collapse;width:100%;margin-top:8px;background:#fff;}
+td,th{border:1px solid #d8d2e4;padding:9px;text-align:center;font-size:13px;vertical-align:middle;}
+th{background:#dcd4e8;white-space:nowrap;}
+.tag{display:inline-block;padding:3px 10px;border-radius:10px;font-size:12px;color:#fff;white-space:nowrap;}
+.t-assigned{background:#3498db;}
+.t-finished{background:#9b59b6;}
+.t-evaluated{background:#27ae60;}
+.detail{font-size:12px;color:#555;text-align:left;line-height:1.7;}
+.finish-form{text-align:left;}
+.finish-form input,.finish-form textarea{width:100%;padding:7px;border:1px solid #c9c2d8;border-radius:5px;margin-top:5px;font-family:inherit;font-size:12px;}
+.finish-form label{font-size:12px;color:#555;display:block;margin-top:6px;}
+button{padding:8px 20px;background:#9887b8;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;}
 button:hover{background:#806fa0;}
-.done-tag{color:#27ae60;font-weight:bold;}
-.msg{color:#27ae60;text-align:center;font-size:14px;margin:10px 0;}
-.btn-row{text-align:center;margin-top:20px;}
+.empty{text-align:center;color:#999;padding:20px;}
+.stars{color:#f39c12;}
 </style>
 </head>
 <body>
-<div class="card">
-<h2>维修人员工单页面</h2>
+<div class="wrap">
+<div class="topbar">
+<h2>维修人员工作台</h2>
+<div class="user">你好，{{ name }}<a href="/logout">退出登录</a></div>
+</div>
+
 {% with messages = get_flashed_messages() %}
   {% if messages %}
     {% for msg in messages %}
-    <p class="msg">{{ msg }}</p >
+    <p class="msg">{{ msg }}</p>
     {% endfor %}
   {% endif %}
 {% endwith %}
+
+<div class="card">
+<h3>我的维修工单（仅显示指派给我的任务）</h3>
+{% if orders %}
 <table>
 <tr>
-<th>报修地点</th>
-<th>故障描述</th>
-<th>紧急等级</th>
-<th>当前状态</th>
-<th>操作</th>
+<th>工单编号</th><th>报修位置</th><th>故障类别</th><th>故障详情</th>
+<th>派单时间</th><th>状态</th><th>维修登记 / 处理结果</th>
 </tr>
-{% for order in orders %}
+{% for o in orders %}
 <tr>
-<td>{{ order[2] }}</td>
-<td>{{ order[1] }}</td>
-<td>{{ order[3] }}</td>
-<td>{{ order[5] }}</td>
+<td>{{ o['order_no'] }}</td>
+<td style="white-space:nowrap;">{{ o['building'] }}{{ o['floor'] }}{{ o['room'] }}</td>
+<td>{{ o['fault_type'] }}</td>
 <td>
-{% if order[5] == '待处理' %}
-<form method="post" style="margin:0;">
-<input type="hidden" name="oid" value="{{ order[0] }}">
-<button type="submit">标记为已完成</button>
+<div class="detail">
+报修人：{{ o['student_name'] or '-' }}<br>
+报修时间：{{ o['create_time'] }}<br>
+故障描述：{{ o['description'] }}
+</div>
+</td>
+<td style="white-space:nowrap;">{{ o['assign_time'] or '-' }}</td>
+<td><span class="tag {% if o['status']=='维修中' %}t-assigned{% elif o['status']=='维修完成' %}t-finished{% else %}t-evaluated{% endif %}">{{ o['status'] }}</span></td>
+<td style="min-width:240px;">
+{% if o['status'] == '维修中' %}
+<form class="finish-form" method="post" action="/worker/finish/{{ o['id'] }}">
+<label>维修方式
+<select name="method" required style="width:100%;padding:7px;border:1px solid #c9c2d8;border-radius:5px;margin-top:5px;font-size:12px;">
+<option value="">请选择</option>
+<option value="现场修复">现场修复</option>
+<option value="更换配件">更换配件</option>
+<option value="临时处理待复修">临时处理待复修</option>
+<option value="上报专项维修">上报专项维修</option>
+</select></label>
+<label>维修内容<textarea name="content" rows="2" placeholder="实际维修操作内容" required></textarea></label>
+<label>耗材使用情况<input type="text" name="materials" placeholder="例：灯管1根；无则填无"></label>
+<label>处理结果
+<select name="result" required style="width:100%;padding:7px;border:1px solid #c9c2d8;border-radius:5px;margin-top:5px;font-size:12px;">
+<option value="">请选择</option>
+<option value="已修复">已修复</option>
+<option value="部分修复">部分修复</option>
+<option value="无法修复已上报">无法修复已上报</option>
+</select></label>
+<div style="text-align:center;margin-top:8px;">
+<button type="submit">登记并完结工单</button>
+</div>
 </form>
 {% else %}
-<span class="done-tag">已完成</span>
+<div class="detail">
+方式：{{ o['repair_method'] }}<br>
+内容：{{ o['repair_content'] }}<br>
+耗材：{{ o['materials'] or '无' }}<br>
+结果：{{ o['repair_result'] }}<br>
+完结时间：{{ o['finish_time'] }}
+{% if o['status'] == '评价结束' %}
+<br>学生评价：<span class="stars">{% for i in range(o['rating'] or 0) %}★{% endfor %}</span> {{ o['evaluate_text'] or '' }}
+{% endif %}
+</div>
 {% endif %}
 </td>
 </tr>
 {% endfor %}
 </table>
-<!-- 替换的返回按钮 -->
-<div class="btn-row">
-    <button type="button" onclick="location.href='/login'">返回登录页面</button>
+{% else %}
+<p class="empty">暂无指派给您的维修工单。</p>
+{% endif %}
 </div>
 </div>
 </body>
