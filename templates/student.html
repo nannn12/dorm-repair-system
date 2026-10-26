@@ -2,51 +2,150 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>学生报修</title>
+<title>学生报修中心</title>
 <style>
-body{background:linear-gradient(135deg,#f0ecf7,#ffffff);min-height:100vh;display:flex;justify-content:center;align-items:center;font-family:Microsoft Yahei;}
-.card{background:#e9e4f0;padding:40px 50px;border-radius:12px;box-shadow:0 4px 12px rgba(100,90,130,0.15);width:400px;}
-h2{text-align:center;color:#333;margin-top:0;}
-.item{margin:15px 0;}
-input,textarea,select{width:100%;padding:10px;border:1px solid #c9c2d8;border-radius:6px;box-sizing:border-box;}
-button{padding:10px 25px;background:#9887b8;color:white;border:none;border-radius:6px;font-size:15px;cursor:pointer;margin:0 8px;}
+*{box-sizing:border-box;}
+body{background:linear-gradient(135deg,#f0ecf7,#ffffff);min-height:100vh;font-family:Microsoft Yahei;margin:0;padding:30px 0;}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px;}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.topbar h2{margin:0;color:#333;font-size:22px;}
+.topbar .user{color:#666;font-size:14px;}
+.topbar a{color:#9887b8;text-decoration:none;margin-left:12px;font-size:14px;}
+.card{background:#e9e4f0;padding:28px 32px;border-radius:12px;box-shadow:0 4px 12px rgba(100,90,130,0.15);margin-bottom:24px;}
+.card h3{margin-top:0;color:#444;border-left:4px solid #9887b8;padding-left:10px;}
+.row{display:flex;gap:14px;flex-wrap:wrap;}
+.item{margin:12px 0;flex:1;min-width:180px;}
+.item label{display:block;font-size:14px;color:#555;margin-bottom:6px;}
+input,textarea,select{width:100%;padding:10px;border:1px solid #c9c2d8;border-radius:6px;font-family:inherit;}
+button{padding:10px 28px;background:#9887b8;color:white;border:none;border-radius:6px;font-size:15px;cursor:pointer;}
 button:hover{background:#806fa0;}
 .msg{color:#27ae60;text-align:center;font-size:14px;margin:10px 0;}
-.btn-row{text-align:center;margin-top:20px;}
+.msg-err{color:#e74c3c;}
+table{border-collapse:collapse;width:100%;margin-top:8px;background:#fff;}
+td,th{border:1px solid #d8d2e4;padding:9px;text-align:center;font-size:13px;vertical-align:middle;}
+th{background:#dcd4e8;}
+.tag{display:inline-block;padding:3px 10px;border-radius:10px;font-size:12px;color:#fff;}
+.t-pending{background:#f39c12;}
+.t-assigned{background:#3498db;}
+.t-finished{background:#9b59b6;}
+.t-evaluated{background:#27ae60;}
+.t-rejected{background:#95a5a6;}
+.steps{display:flex;align-items:center;justify-content:center;margin:4px 0 2px;flex-wrap:wrap;}
+.step{font-size:12px;color:#999;padding:2px 6px;}
+.step.on{color:#806fa0;font-weight:bold;}
+.arrow{color:#ccc;margin:0 2px;font-size:12px;}
+.stars{color:#f39c12;letter-spacing:2px;}
+.eval-form select,.eval-form input{margin-top:4px;}
+.small-btn{padding:5px 14px;font-size:13px;}
+.empty{text-align:center;color:#999;padding:20px;}
 </style>
 </head>
 <body>
-<div class="card">
-<h2>学生报修页面</h2>
+<div class="wrap">
+<div class="topbar">
+<h2>学生报修中心</h2>
+<div class="user">你好，{{ name }}<a href="/logout">退出登录</a></div>
+</div>
+
 {% with messages = get_flashed_messages() %}
   {% if messages %}
     {% for msg in messages %}
-    <p class="msg">{{ msg }}</p >
+    <p class="msg">{{ msg }}</p>
     {% endfor %}
   {% endif %}
 {% endwith %}
-<form method="post">
-<div class="item">
-报修地点：<input type="text" name="place" placeholder="例：3号宿舍201">
+
+<!-- 标准化报修填报 -->
+<div class="card">
+<h3>提交报修申请</h3>
+<form method="post" action="/student/submit">
+<div class="row">
+<div class="item"><label>宿舍楼栋</label>
+<select name="building" required>
+<option value="">请选择楼栋</option>
+{% for b in ['1号宿舍楼','2号宿舍楼','3号宿舍楼','4号宿舍楼','5号宿舍楼','6号宿舍楼','7号宿舍楼','8号宿舍楼'] %}
+<option value="{{ b }}">{{ b }}</option>
+{% endfor %}
+</select></div>
+<div class="item"><label>楼层</label>
+<select name="floor" required>
+<option value="">请选择楼层</option>
+{% for f in ['1层','2层','3层','4层','5层','6层'] %}
+<option value="{{ f }}">{{ f }}</option>
+{% endfor %}
+</select></div>
+<div class="item"><label>宿舍号</label>
+<input type="text" name="room" placeholder="例：201" required></div>
+<div class="item"><label>故障类型</label>
+<select name="fault_type" required>
+<option value="">请选择故障类型</option>
+{% for t in fault_types %}
+<option value="{{ t }}">{{ t }}</option>
+{% endfor %}
+</select></div>
 </div>
-<div class="item">
-故障描述：<textarea name="desc" rows="4" placeholder="例：宿舍电灯损坏"></textarea>
-</div>
-<div class="item">
-紧急等级：
-<select name="level">
-<option value="高">高（紧急）</option>
-<option value="中">中</option>
-<option value="低">低</option>
-</select>
-</div>
-<div class="btn-row">
+<div class="item"><label>故障现象与损坏情况描述</label>
+<textarea name="desc" rows="3" placeholder="请详细描述故障现象、损坏程度、发生位置等，便于维修人员准确处理" required></textarea></div>
+<div style="text-align:center;margin-top:14px;">
 <button type="submit">提交报修</button>
 </div>
 </form>
-<!-- ==========这里是修改的返回按钮========== -->
-<div class="btn-row">
-    <button type="button" onclick="location.href='/login'">返回登录页面</button>
+</div>
+
+<!-- 个人工单全量查询 + 进度查看 -->
+<div class="card">
+<h3>我的报修工单</h3>
+{% if orders %}
+<table>
+<tr>
+<th>工单编号</th><th>位置</th><th>故障类型</th><th>故障描述</th>
+<th>维修进度</th><th>维修人员</th><th>报修时间</th><th>服务评价</th>
+</tr>
+{% for o in orders %}
+<tr>
+<td>{{ o['order_no'] }}</td>
+<td>{{ o['building'] }}{{ o['floor'] }}{{ o['room'] }}</td>
+<td>{{ o['fault_type'] }}</td>
+<td style="max-width:180px;">{{ o['description'] }}</td>
+<td>
+<span class="tag {% if o['status']=='待接单' %}t-pending{% elif o['status']=='维修中' %}t-assigned{% elif o['status']=='维修完成' %}t-finished{% elif o['status']=='评价结束' %}t-evaluated{% else %}t-rejected{% endif %}">{{ o['status'] }}</span>
+<div class="steps">
+<span class="step {% if o['status'] in ['待接单','维修中','维修完成','评价结束'] %}on{% endif %}">已提交</span><span class="arrow">→</span>
+<span class="step {% if o['status'] in ['维修中','维修完成','评价结束'] %}on{% endif %}">已派单</span><span class="arrow">→</span>
+<span class="step {% if o['status'] in ['维修完成','评价结束'] %}on{% endif %}">维修完成</span><span class="arrow">→</span>
+<span class="step {% if o['status']=='评价结束' %}on{% endif %}">评价结束</span>
+</div>
+{% if o['status']=='已驳回' %}<div style="font-size:12px;color:#95a5a6;">审核未通过，如有疑问请联系宿管</div>{% endif %}
+</td>
+<td>{{ o['worker_name'] or '待分配' }}</td>
+<td>{{ o['create_time'] }}</td>
+<td>
+{% if o['status'] == '维修完成' %}
+<form class="eval-form" method="post" action="/student/evaluate/{{ o['id'] }}">
+<select name="rating" required>
+<option value="">星级</option>
+<option value="5">★★★★★ 非常满意</option>
+<option value="4">★★★★ 满意</option>
+<option value="3">★★★ 一般</option>
+<option value="2">★★ 不满意</option>
+<option value="1">★ 非常不满意</option>
+</select>
+<input type="text" name="evaluate_text" placeholder="评价：时效/质量/态度" maxlength="100">
+<button class="small-btn" type="submit">提交评价</button>
+</form>
+{% elif o['status'] == '评价结束' %}
+<div class="stars">{% for i in range(o['rating'] or 0) %}★{% endfor %}</div>
+<div style="font-size:12px;color:#666;">{{ o['evaluate_text'] or '' }}</div>
+{% else %}
+<span style="color:#999;font-size:12px;">维修完成后可评价</span>
+{% endif %}
+</td>
+</tr>
+{% endfor %}
+</table>
+{% else %}
+<p class="empty">暂无报修记录，可在上方提交第一条报修申请。</p>
+{% endif %}
 </div>
 </div>
 </body>
