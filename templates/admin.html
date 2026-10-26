@@ -4,42 +4,163 @@
 <meta charset="utf-8">
 <title>管理员后台</title>
 <style>
-body{background:linear-gradient(135deg,#f0ecf7,#ffffff);min-height:100vh;display:flex;justify-content:center;align-items:center;font-family:Microsoft Yahei;}
-.card{background:#e9e4f0;padding:40px;border-radius:12px;box-shadow:0 4px 12px rgba(100,90,130,0.15);width:1000px;}
-h2{text-align:center;color:#333;margin-top:0;}
-table{border-collapse:collapse;width:100%;margin:20px 0;}
-td,th{border:1px solid #c9c2d8;padding:10px;text-align:center;}
-th{background:#dcd4e8;}
-button{padding:6px 15px;background:#9887b8;color:white;border:none;border-radius:5px;cursor:pointer;}
-.btn-row{text-align:center;margin-top:20px;}
+*{box-sizing:border-box;}
+body{background:linear-gradient(135deg,#f0ecf7,#ffffff);min-height:100vh;font-family:Microsoft Yahei;margin:0;padding:30px 0;}
+.wrap{max-width:1360px;margin:0 auto;padding:0 20px;}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.topbar h2{margin:0;color:#333;font-size:22px;}
+.topbar a{color:#9887b8;text-decoration:none;font-size:14px;}
+.card{background:#e9e4f0;padding:26px 30px;border-radius:12px;box-shadow:0 4px 12px rgba(100,90,130,0.15);margin-bottom:22px;}
+.card h3{margin-top:0;color:#444;border-left:4px solid #9887b8;padding-left:10px;}
+.stat-row{display:flex;gap:14px;flex-wrap:wrap;}
+.stat{flex:1;min-width:140px;background:#fff;border-radius:10px;padding:16px;text-align:center;box-shadow:0 2px 6px rgba(100,90,130,0.1);}
+.stat .num{font-size:26px;font-weight:bold;color:#806fa0;}
+.stat .lbl{font-size:13px;color:#666;margin-top:4px;}
+.filter{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+.filter .f{display:flex;flex-direction:column;font-size:13px;color:#555;}
+select,input[type=date]{padding:8px;border:1px solid #c9c2d8;border-radius:6px;font-family:inherit;}
+button{padding:8px 20px;background:#9887b8;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;}
+button:hover{background:#806fa0;}
+.btn-sm{padding:4px 12px;font-size:12px;}
+.btn-reject{background:#95a5a6;}
+.btn-reject:hover{background:#7f8c8d;}
+.msg{color:#27ae60;text-align:center;font-size:14px;margin:8px 0;}
+table{border-collapse:collapse;width:100%;margin-top:14px;background:#fff;}
+td,th{border:1px solid #d8d2e4;padding:8px;text-align:center;font-size:12px;vertical-align:middle;}
+th{background:#dcd4e8;white-space:nowrap;}
+.tag{display:inline-block;padding:3px 10px;border-radius:10px;font-size:12px;color:#fff;white-space:nowrap;}
+.t-pending{background:#f39c12;}
+.t-assigned{background:#3498db;}
+.t-finished{background:#9b59b6;}
+.t-evaluated{background:#27ae60;}
+.t-rejected{background:#95a5a6;}
+.assign-form{display:flex;gap:6px;align-items:center;justify-content:center;}
+.assign-form select{padding:5px;font-size:12px;}
+.stars{color:#f39c12;}
+.empty{text-align:center;color:#999;padding:20px;}
+.detail{font-size:11px;color:#888;text-align:left;line-height:1.6;}
 </style>
 </head>
 <body>
+<div class="wrap">
+<div class="topbar">
+<h2>管理员后台 · 工单统一管理平台</h2>
+<a href="/logout">退出登录</a>
+</div>
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    {% for msg in messages %}
+    <p class="msg">{{ msg }}</p>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<!-- 全校工单状态总览 -->
 <div class="card">
-<h2>管理员后台 - 全部工单</h2>
+<h3>工单数据总览</h3>
+<div class="stat-row">
+<div class="stat"><div class="num">{{ stat.get('待接单', 0) }}</div><div class="lbl">待接单（待审核）</div></div>
+<div class="stat"><div class="num">{{ stat.get('维修中', 0) }}</div><div class="lbl">维修中</div></div>
+<div class="stat"><div class="num">{{ stat.get('维修完成', 0) }}</div><div class="lbl">维修完成（待评价）</div></div>
+<div class="stat"><div class="num">{{ stat.get('评价结束', 0) }}</div><div class="lbl">评价结束（已归档）</div></div>
+<div class="stat"><div class="num">{{ stat.get('已驳回', 0) }}</div><div class="lbl">已驳回</div></div>
+</div>
+</div>
+
+<!-- 多条件历史数据检索 -->
+<div class="card">
+<h3>工单检索</h3>
+<form class="filter" method="get" action="/admin">
+<div class="f">开始日期<input type="date" name="start" value="{{ filters.start }}"></div>
+<div class="f">结束日期<input type="date" name="end" value="{{ filters.end }}"></div>
+<div class="f">宿舍楼栋
+<select name="building"><option value="">全部</option>
+{% for b in buildings %}<option value="{{ b }}" {% if filters.building==b %}selected{% endif %}>{{ b }}</option>{% endfor %}
+</select></div>
+<div class="f">故障类别
+<select name="fault_type"><option value="">全部</option>
+{% for t in fault_types %}<option value="{{ t }}" {% if filters.fault_type==t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+</select></div>
+<div class="f">维修人员
+<select name="worker"><option value="">全部</option>
+{% for w in workers %}<option value="{{ w['id'] }}" {% if filters.worker|string==w['id']|string %}selected{% endif %}>{{ w['name'] }}（{{ w['skill'] }}）</option>{% endfor %}
+</select></div>
+<div class="f">工单状态
+<select name="status"><option value="">全部</option>
+{% for s in statuses %}<option value="{{ s }}" {% if filters.status==s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+</select></div>
+<button type="submit">查询</button>
+<a href="/admin" style="font-size:13px;color:#806fa0;text-decoration:none;padding-bottom:8px;">重置</a>
+</form>
+</div>
+
+<!-- 工单列表：审核 / 派单 / 监管 -->
+<div class="card">
+<h3>全校工单列表（共 {{ orders|length }} 条）</h3>
+{% if orders %}
 <table>
 <tr>
-<th>工单ID</th>
-<th>报修地点</th>
-<th>故障描述</th>
-<th>紧急等级</th>
-<th>状态</th>
-<th>创建时间</th>
+<th>工单编号</th><th>报修学生</th><th>位置</th><th>故障类别</th><th>故障描述</th>
+<th>状态</th><th>维修人员</th><th>报修时间</th><th>维修记录 / 评价</th><th>操作</th>
 </tr>
-{% for order in orders %}
+{% for o in orders %}
 <tr>
-<td>{{ order[0] }}</td>
-<td>{{ order[2] }}</td>
-<td>{{ order[1] }}</td>
-<td>{{ order[3] }}</td>
-<td>{{ order[5] }}</td>
-<td>{{ order[6] }}</td>
+<td>{{ o['order_no'] }}</td>
+<td>{{ o['student_name'] or '-' }}</td>
+<td style="white-space:nowrap;">{{ o['building'] }}{{ o['floor'] }}{{ o['room'] }}</td>
+<td>{{ o['fault_type'] }}</td>
+<td style="max-width:160px;">{{ o['description'] }}</td>
+<td><span class="tag {% if o['status']=='待接单' %}t-pending{% elif o['status']=='维修中' %}t-assigned{% elif o['status']=='维修完成' %}t-finished{% elif o['status']=='评价结束' %}t-evaluated{% else %}t-rejected{% endif %}">{{ o['status'] }}</span></td>
+<td>{{ o['worker_name'] or '未分配' }}</td>
+<td style="white-space:nowrap;">{{ o['create_time'] }}</td>
+<td>
+{% if o['repair_result'] %}
+<div class="detail">
+方式：{{ o['repair_method'] }}<br>
+内容：{{ o['repair_content'] }}<br>
+耗材：{{ o['materials'] or '无' }}<br>
+结果：{{ o['repair_result'] }}
+</div>
+{% endif %}
+{% if o['status'] == '评价结束' %}
+<div class="stars">{% for i in range(o['rating'] or 0) %}★{% endfor %}</div>
+<div style="font-size:11px;color:#666;">{{ o['evaluate_text'] or '' }}</div>
+{% elif not o['repair_result'] %}
+<span style="color:#bbb;font-size:11px;">-</span>
+{% endif %}
+</td>
+<td>
+{% if o['status'] == '待接单' %}
+<form class="assign-form" method="post" action="/admin/assign/{{ o['id'] }}">
+<select name="worker_id" required>
+<option value="">选择维修员</option>
+{% for w in workers %}
+<option value="{{ w['id'] }}">{{ w['name'] }}（{{ w['skill'] }}·在修{{ w['task_count'] }}单）</option>
+{% endfor %}
+</select>
+<button class="btn-sm" type="submit">审核通过并派单</button>
+</form>
+<form method="post" action="/admin/review/{{ o['id'] }}" style="margin-top:5px;">
+<input type="hidden" name="action" value="reject">
+<button class="btn-sm btn-reject" type="submit" onclick="return confirm('确认驳回该工单？')">驳回</button>
+</form>
+{% elif o['status'] == '维修中' %}
+<span style="font-size:12px;color:#3498db;">维修作业中</span>
+{% elif o['status'] == '维修完成' %}
+<span style="font-size:12px;color:#9b59b6;">待学生评价</span>
+{% elif o['status'] == '评价结束' %}
+<span style="font-size:12px;color:#27ae60;">已归档</span>
+{% else %}
+<span style="font-size:12px;color:#95a5a6;">已驳回</span>
+{% endif %}
+</td>
 </tr>
 {% endfor %}
 </table>
-<!-- 替换的返回按钮 -->
-<div class="btn-row">
-    <button type="button" onclick="location.href='/login'">返回登录页面</button>
+{% else %}
+<p class="empty">当前筛选条件下暂无工单数据。</p>
+{% endif %}
 </div>
 </div>
 </body>
